@@ -5,7 +5,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -22,6 +24,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import kotlin.math.min
 
 // A helper data class to hold the pre-parsed, renderable path information.
@@ -106,7 +109,9 @@ private fun isPointInPath(point: Offset, path: Path): Boolean {
 fun WorldMap(
     modifier: Modifier = Modifier,
     highlightedCountryIds: Set<String>,
-    onCountryClick: (Country) -> Unit,
+    interactive: Boolean = true,
+    showControls: Boolean = false,
+    onCountryClick: (Country) -> Unit = {},
     defaultColor: Color = Color(0xFFECECEC),
     highlightColor: Color = Color(0xFFC8A2C8), // Lilac
     strokeColor: Color = Color.Black
@@ -128,8 +133,14 @@ fun WorldMap(
     val svgWidth = 2000f
     val svgHeight = 857f
 
+    LaunchedEffect(interactive) {
+        if (!interactive) {
+            scale = 1f
+            offset = Offset.Zero
+        }
+    }
     Box(
-        modifier = modifier
+        modifier = if(interactive) modifier
             .clipToBounds()
             .onSizeChanged { canvasSize = it }
             .pointerInput(Unit) {
@@ -159,7 +170,7 @@ fun WorldMap(
                     )
                     scale = newScale
                 }
-            }
+            } else Modifier
     ) {
         Canvas(
             modifier = Modifier
@@ -227,5 +238,20 @@ fun WorldMap(
                 }
             }
         }
+
+        if (interactive && showControls) {
+            MapControls(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+                onZoomIn = { scale = (scale * 1.2f).coerceIn(0.5f, 20f) },
+                onZoomOut = { scale = (scale / 1.2f).coerceIn(0.5f, 20f) },
+                onPanUp = { offset += Offset(0f, canvasSize.height * 0.1f) },
+                onPanDown = { offset += Offset(0f, -canvasSize.height * 0.1f) },
+                onPanLeft = { offset += Offset(canvasSize.width * 0.1f, 0f) },
+                onPanRight = { offset += Offset(-canvasSize.width * 0.1f, 0f) }
+            )
+        }
+
     }
 }

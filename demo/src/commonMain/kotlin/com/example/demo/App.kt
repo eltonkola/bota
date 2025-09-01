@@ -20,146 +20,157 @@ import com.eltonkola.bota.WorldMapCountries
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App() {
+fun App(
+    showControls: Boolean = false,
+) {
     MaterialTheme {
-        var selectedCountryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
-        var searchQuery by remember { mutableStateOf("") }
 
-        // Centralized logic to toggle a country's selection state
-        val onToggleCountry: (Country) -> Unit = { country ->
-            selectedCountryIds = if (country.id in selectedCountryIds) {
-                selectedCountryIds - country.id
-            } else {
-                selectedCountryIds + country.id
-            }
-        }
-
-        Column(
+        Surface(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            color = MaterialTheme.colorScheme.background
         ) {
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = "Interactive World Map",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
+            var selectedCountryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+            var searchQuery by remember { mutableStateOf("") }
 
-            // The WorldMap Composable, occupying the top portion of the screen
-            Box(
-                modifier = Modifier
-                    .weight(0.4f)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.tertiaryContainer)
-            ) {
-                WorldMap(
-                    modifier = Modifier.fillMaxSize(),
-                    highlightedCountryIds = selectedCountryIds,
-                    onCountryClick = onToggleCountry
-                )
+            // Centralized logic to toggle a country's selection state
+            val onToggleCountry: (Country) -> Unit = { country ->
+                selectedCountryIds = if (country.id in selectedCountryIds) {
+                    selectedCountryIds - country.id
+                } else {
+                    selectedCountryIds + country.id
+                }
             }
 
-            // Controls: Add/Remove All and Search
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { selectedCountryIds = WorldMapCountries.data.map { it.id }.toSet() },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Select All")
-                    }
-                    Button(
-                        onClick = { selectedCountryIds = emptySet() },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Deselect All")
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text("Search Countries") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton({
-                            searchQuery = ""
-                        }){
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "clear",
-                            )
-                        }
-                    }
+                Text(
+                    modifier = Modifier.padding(16.dp),
+                    text = "Interactive World Map",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            }
 
-
-            // A Row to hold the two lists side-by-side
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .weight(0.6f),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // --- Column for Selected Countries ---
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Selected (${selectedCountryIds.size})",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                // The WorldMap Composable, occupying the top portion of the screen
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.4f)
+                        //.height(400.dp)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    WorldMap(
+                        interactive = true,
+                        showControls = showControls,
+                        modifier = Modifier.fillMaxSize(),
+                        highlightedCountryIds = selectedCountryIds,
+                        onCountryClick = onToggleCountry
                     )
-                    val selectedCountries = remember(selectedCountryIds) {
-                        WorldMapCountries.data
-                            .filter { it.id in selectedCountryIds }
-                            .sortedBy { it.name }
-                    }
-                    LazyColumn {
-                        items(selectedCountries, key = { it.id }) { country ->
-                            CountryListItem(
-                                country = country,
-                                isSelected = true,
-                                onToggle = { onToggleCountry(country) }
-                            )
-                        }
-                    }
                 }
 
-                // --- Column for All Countries with Search Filter ---
-                Column(modifier = Modifier.weight(1f)) {
+                // Controls: Add/Remove All and Search
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { selectedCountryIds = WorldMapCountries.data.map { it.id }.toSet() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Select All")
+                        }
+                        Button(
+                            onClick = { selectedCountryIds = emptySet() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Deselect All")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Search Countries") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton({
+                                searchQuery = ""
+                            }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "clear",
+                                )
+                            }
+                        }
+                    )
+                }
 
-                    val allCountriesFiltered = remember(searchQuery) {
-                        if (searchQuery.isBlank()) {
+
+                // A Row to hold the two lists side-by-side
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .weight(0.6f),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // --- Column for Selected Countries ---
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Selected (${selectedCountryIds.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        val selectedCountries = remember(selectedCountryIds) {
                             WorldMapCountries.data
-                        } else {
-                            WorldMapCountries.data.filter {
-                                it.name.contains(searchQuery, ignoreCase = true)
+                                .filter { it.id in selectedCountryIds }
+                                .sortedBy { it.name }
+                        }
+                        LazyColumn {
+                            items(selectedCountries, key = { it.id }) { country ->
+                                CountryListItem(
+                                    country = country,
+                                    isSelected = true,
+                                    onToggle = { onToggleCountry(country) }
+                                )
                             }
                         }
                     }
-                    Text(
-                        text = "All Countries (${allCountriesFiltered.size})",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    LazyColumn {
-                        items(allCountriesFiltered, key = { it.id }) { country ->
-                            CountryListItem(
-                                country = country,
-                                isSelected = country.id in selectedCountryIds,
-                                onToggle = { onToggleCountry(country) }
-                            )
+
+                    // --- Column for All Countries with Search Filter ---
+                    Column(modifier = Modifier.weight(1f)) {
+
+                        val allCountriesFiltered = remember(searchQuery) {
+                            if (searchQuery.isBlank()) {
+                                WorldMapCountries.data
+                            } else {
+                                WorldMapCountries.data.filter {
+                                    it.name.contains(searchQuery, ignoreCase = true)
+                                }
+                            }
+                        }
+                        Text(
+                            text = "All Countries (${allCountriesFiltered.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        LazyColumn {
+                            items(allCountriesFiltered, key = { it.id }) { country ->
+                                CountryListItem(
+                                    country = country,
+                                    isSelected = country.id in selectedCountryIds,
+                                    onToggle = { onToggleCountry(country) }
+                                )
+                            }
                         }
                     }
                 }
